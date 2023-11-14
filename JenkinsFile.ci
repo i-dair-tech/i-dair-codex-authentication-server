@@ -1,0 +1,81 @@
+def incrementValue(value) {
+  return value + 1
+}
+def  version 
+
+pipeline {
+  agent any
+  environment {
+    VERSION = ''
+    majord = 0
+    minor = 0
+    }
+  stages {
+    stage('build') {
+      steps {
+        checkout([$class: 'GitSCM', branches: [[name: '*/development']], extensions: [], userRemoteConfigs: [[credentialsId: 'Keygen-ssh', url: 'git@github.com:i-dair-tech/ri-codex-authentication-server.git']]])  
+        sh 'npm install'
+      }
+    }       
+	  stage('version') {
+      steps {
+        script {
+          if (!fileExists('patch.txt')) {
+              writeFile(file: 'patch.txt', text: '0')
+          }
+          def previousValue = readFile('patch.txt').trim() ?: 0
+          def counter = incrementValue(previousValue.toInteger())
+          writeFile(file: 'patch.txt', text: counter.toString())
+          if (!fileExists('major.txt')) {
+            writeFile(file: 'major.txt', text: '0')
+          }
+          if (!fileExists('minor.txt')) {
+            writeFile(file: 'minor.txt', text: '0')
+          }
+          def next = readFile('minor.txt').trim() 
+          def previ= readFile('major.txt').trim() 
+          def minornew =0 
+          if(next <  env.minor){
+            minornew = env.minor
+            previousValue = 0
+            counter = incrementValue(previousValue)
+            writeFile(file: 'patch.txt', text: counter.toString())
+          }
+          else {
+            minornew = next
+          }
+          writeFile(file: 'test.txt', text: minornew.toString())
+          def  major = 0
+          if(previ <  env.majord){
+            major = env.majord
+            previousValue = 0
+            counter = incrementValue(previousValue)
+            writeFile(file: 'patch.txt', text: counter.toString())
+          }
+          else {
+            major = previ
+          }
+          writeFile(file: 'major.txt', text: major.toString())
+          def patch = counter 
+          version = "${major}.${minornew}.${patch}"
+        }
+      }
+    }
+	  stage('Release') {
+      steps { 
+        withCredentials([file(credentialsId: 'cancer', variable: 'cancer')]) {
+          sh 'git branch'
+          sh ''' #! /bin/sh
+            gh auth login --with-token < ${cancer}  '''
+          echo "${version}"
+          sh """gh api  --method POST  -H "Accept: application/vnd.github+json"  /repos/i-dair-tech/ri-codex-authentication-server/releases -f tag_name='v'.${version} -f target_commitish='development' -f name=='v'.${version} -f body='Description of the release' -F draft=false -F prerelease=false -F generate_release_notes=false """
+        }
+      }
+    } 
+  }
+  post { 
+    always { 
+      echo 'I will always say end again!'
+    }
+  }
+}
