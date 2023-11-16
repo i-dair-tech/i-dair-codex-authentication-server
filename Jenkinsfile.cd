@@ -22,13 +22,13 @@ pipeline {
     
       steps {
           
-	     checkout([$class: 'GitSCM', branches: [[name: '*/preprod']], extensions: [], userRemoteConfigs: [[credentialsId: 'Keygen-ssh', url: 'git@github.com:i-dair-tech/ri-codex-authentication-server.git']]])   
+	     checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'Keygen-ssh', url: 'git@github.com:i-dair-tech/i-dair-codex-authentication-server.git']]])   
            withCredentials([usernamePassword(credentialsId: 'idair', passwordVariable: 'idairpass', usernameVariable: 'idairuser')])  {
                sh 'docker login  -u ${idairuser} -p ${idairpass} '
           
         }
          script {
-                	app = docker.build("windsocially/ri-codex-authserver")
+                	app = docker.build("windsocially/i-dair-codex-authentication-server")
                 }
         
          	
@@ -41,11 +41,11 @@ pipeline {
                 script {
                     
                     
-                    def patch  = readFile('/var/lib/jenkins/workspace/ri-codex-authserver.ci/patch.txt').trim()
+                    def patch  = readFile('/var/lib/jenkins/workspace/i-dair-codex-authentication-server.ci/patch.txt').trim()
                     
                        
-                         def major  = readFile('/var/lib/jenkins/workspace/ri-codex-authserver.ci/major.txt').trim()
-                          def minornew  = readFile('/var/lib/jenkins/workspace/ri-codex-authserver.ci/minor.txt').trim()
+                         def major  = readFile('/var/lib/jenkins/workspace/i-dair-codex-authentication-server.ci/major.txt').trim()
+                          def minornew  = readFile('/var/lib/jenkins/workspace/i-dair-codex-authentication-server.ci/minor.txt').trim()
                    
                      version = "${major}.${minornew}.${patch}"
                  
@@ -71,8 +71,8 @@ pipeline {
 			            app.push("latest")
         }
            }
-           sh "docker rmi -f windsocially/ri-codex-authserver:v.${version}"
-           sh "docker rmi -f windsocially/ri-codex-authserver"
+           sh "docker rmi -f windsocially/i-dair-codex-authentication-server:v.${version}"
+           sh "docker rmi -f windsocially/i-dair-codex-authentication-server"
       }
       
     }

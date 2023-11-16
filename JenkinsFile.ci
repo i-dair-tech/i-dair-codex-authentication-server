@@ -7,13 +7,13 @@ pipeline {
   agent any
   environment {
     VERSION = ''
-    majord = 0
+    majord = 1
     minor = 0
     }
   stages {
     stage('build') {
       steps {
-        checkout([$class: 'GitSCM', branches: [[name: '*/development']], extensions: [], userRemoteConfigs: [[credentialsId: 'Keygen-ssh', url: 'git@github.com:i-dair-tech/ri-codex-authentication-server.git']]])  
+        checkout([$class: 'GitSCM', branches: [[name: '*/main']], extensions: [], userRemoteConfigs: [[credentialsId: 'Keygen-ssh', url: 'git@github.com:i-dair-tech/i-dair-codex-authentication-server.git']]])  
         sh 'npm install'
       }
     }       
@@ -38,7 +38,7 @@ pipeline {
           if(next <  env.minor){
             minornew = env.minor
             previousValue = 0
-            counter = incrementValue(previousValue)
+            counter = previousValue
             writeFile(file: 'patch.txt', text: counter.toString())
           }
           else {
@@ -49,7 +49,7 @@ pipeline {
           if(previ <  env.majord){
             major = env.majord
             previousValue = 0
-            counter = incrementValue(previousValue)
+            counter = previousValue
             writeFile(file: 'patch.txt', text: counter.toString())
           }
           else {
@@ -68,7 +68,7 @@ pipeline {
           sh ''' #! /bin/sh
             gh auth login --with-token < ${cancer}  '''
           echo "${version}"
-          sh """gh api  --method POST  -H "Accept: application/vnd.github+json"  /repos/i-dair-tech/ri-codex-authentication-server/releases -f tag_name='v'.${version} -f target_commitish='development' -f name=='v'.${version} -f body='Description of the release' -F draft=false -F prerelease=false -F generate_release_notes=false """
+          sh """gh api  --method POST  -H "Accept: application/vnd.github+json"  /repos/i-dair-tech/i-dair-codex-authentication-server/releases -f tag_name='v'.${version} -f target_commitish='main' -f name=='v'.${version} -f body='Description of the release' -F draft=false -F prerelease=false -F generate_release_notes=false """
         }
       }
     } 
